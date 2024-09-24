@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Animated Countdown Manager</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Basic Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: #343a40;
+            color: #fff;
+            padding: 20px;
+            transition: width 0.3s;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar ul li {
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            background-color: #495057;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar ul li:hover {
+            background-color: #6c757d;
+            transform: translateX(5px);
+        }
+
+        .sidebar ul li.active {
+            background-color: #28a745;
+        }
+
+        .sidebar ul li i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Header within Main Content */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+        }
+
+        /* Add Button */
+        #addCountdownBtn {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        #addCountdownBtn:hover {
+            background-color: #218838;
+            transform: scale(1.1);
+        }
+
+        /* Countdown Container */
+        #countdowns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .countdown {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 300px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        /* Slide In Animation */
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Slide Out Animation */
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .countdown h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .countdown p {
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .time {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+
+        /* Slider Bar */
+        .slider-container {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 10px;
+        }
+
+        .slider {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        /* Action Buttons */
+        .actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+        }
+
+        .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            margin-left: 8px;
+            font-size: 18px;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        /* Specific hover colors for edit and delete buttons */
+        .actions .edit-btn:hover {
+            color: #f1c40f; /* Yellow */
+            transform: scale(1.2);
+        }
+
+        .actions .delete-btn:hover {
+            color: #e74c3c; /* Red */
+            transform: scale(1.2);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+            animation: fadeIn 0.5s forwards;
+        }
+
+        /* Fade In Animation for Modal */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Fade Out Animation for Modal */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px; 
+            border-radius: 8px;
+            position: relative;
+            animation: slideInModal 0.5s forwards;
+        }
+
+        /* Slide In Modal Animation */
+        @keyframes slideInModal {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Slide Out Modal Animation */
+        @keyframes slideOutModal {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            transform: scale(1.2);
+        }
+
+        .modal form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal form label {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .modal form input,
+        .modal form textarea,
+        .modal form input[type="date"],
+        .modal form input[type="time"] {
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+
+        .modal form input:focus,
+        .modal form textarea:focus,
+        .modal form input[type="date"]:focus,
+        .modal form input[type="time"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .modal form button {
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .modal form button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .sidebar h2 {
+                font-size: 20px;
+            }
+
+            .sidebar ul li {
+                padding: 10px 16px;
+            }
+
+            .sidebar ul li i {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar {
+                display: none;
+            }
+
+            body {
+                flex-direction: column;
+            }
+
+            .main-content {
+                padding: 10px;
+            }
+
+            .countdown {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Countdown Manager</h2>
+        <ul>
+            <li id="nav-active" class="active"><i class="fas fa-hourglass-half"></i> Active</li>
+            <li id="nav-deleted"><i class="fas fa-trash-alt"></i> Recently Deleted</li>
+            <li id="nav-history"><i class="fas fa-history"></i> History</li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header within Main Content -->
+        <div class="header">
+            <h1 id="section-title">Active Countdowns</h1>
+            <button id="addCountdownBtn" title="Add Countdown"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <!-- Countdown Container -->
+        <div id="countdowns">
+            <!-- Countdown items will be appended here -->
+        </div>
+    </div>
+
+    <!-- Modal for Adding/Editing Countdown -->
+    <div id="countdownModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Countdown</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="countdownForm">
+                <input type="hidden" id="countdownId">
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title" required>
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="3" required></textarea>
+
+                <label for="date">Target Date:</label>
+                <input type="date" id="date" name="date" required>
+
+                <label for="time">Target Time (optional):</label>
+                <input type="time" id="time" name="time">
+
+                <button type="submit">Save Countdown</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get elements
+        const addBtn = document.getElementById('addCountdownBtn');
+        const modal = document.getElementById('countdownModal');
+        const closeModalBtn = document.querySelector('.close');
+        const countdownForm = document.getElementById('countdownForm');
+        const countdownsContainer = document.getElementById('countdowns');
+        const modalTitle = document.getElementById('modalTitle');
+        const countdownIdInput = document.getElementById('countdownId');
+        const navActive = document.getElementById('nav-active');
+        const navDeleted = document.getElementById('nav-deleted');
+        const navHistory = document.getElementById('nav-history');
+        const sectionTitle = document.getElementById('section-title');
+
+        // Initialize countdowns array from localStorage or empty array
+        let countdowns = JSON.parse(localStorage.getItem('countdowns')) || [];
+
+        // Variable to track current view
+        let currentView = 'active'; // 'active', 'deleted', 'history'
+
+        // Function to save countdowns to localStorage
+        function saveCountdowns() {
+            localStorage.setItem('countdowns', JSON.stringify(countdowns));
+        }
+
+        // Function to open modal
+        function openModal(isEdit = false, countdown = {}) {
+            modal.style.display = 'block';
+            modal.classList.remove('fade-out');
+            modal.classList.add('fade-in');
+
+            if (isEdit) {
+                modalTitle.textContent = 'Edit Countdown';
+                countdownIdInput.value = countdown.id;
+                document.getElementById('title').value = countdown.title;
+                document.getElementById('description').value = countdown.description;
+                document.getElementById('date').value = countdown.date;
+                document.getElementById('time').value = countdown.time || '';
+            } else {
+                modalTitle.textContent = 'Add New Countdown';
+                countdownForm.reset();
+                countdownIdInput.value = '';
+            }
+        }
+
+        // Function to close modal
+        function closeModalFunc() {
+            modal.classList.remove('fade-in');
+            modal.classList.add('fade-out');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                countdownForm.reset();
+                countdownIdInput.value = '';
+                modalTitle.textContent = 'Add New Countdown';
+            }, 500); // Duration matches the animation
+        }
+
+        // Open modal on add button click
+        addBtn.addEventListener('click', () => openModal());
+
+        // Close modal when 'x' is clicked
+        closeModalBtn.addEventListener('click', closeModalFunc);
+
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', (e) => {
+            if (e.target == modal) {
+                closeModalFunc();
+            }
+        });
+
+        // Handle form submission for adding/editing countdown
+        countdownForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Get form values
+            const id = countdownIdInput.value;
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+
+            // Combine date and time
+            let targetDateTime;
+            if (time) {
+                targetDateTime = new Date(`${date}T${time}:00`);
+            } else {
+                targetDateTime = new Date(`${date}T00:00:00`);
+            }
+
+            // Validate date
+            if (isNaN(targetDateTime.getTime())) {
+                alert('Invalid date or time.');
+                return;
+            }
+
+            if (id) {
+                // Edit existing countdown
+                const index = countdowns.findIndex(cd => cd.id === id);
+                if (index !== -1) {
+                    // Update countdown details
+                    countdowns[index] = { 
+                        ...countdowns[index],
+                        title, 
+                        description, 
+                        date, 
+                        time,
+                        startDate: new Date().toISOString() // Reset startDate on edit
+                    };
+                }
+            } else {
+                // Add new countdown with unique ID and startDate
+                const newCountdown = {
+                    id: Date.now().toString(),
+                    title,
+                    description,
+                    date,
+                    time,
+                    startDate: new Date().toISOString(),
+                    status: 'active', // Default status
+                    deletedDate: null,
+                    completedDate: null
+                };
+                countdowns.push(newCountdown);
+            }
+
+            // Save to localStorage
+            saveCountdowns();
+
+            // Render countdowns
+            renderCountdowns();
+
+            // Close modal and reset form
+            closeModalFunc();
+        });
+
+        // Function to create a countdown element
+        function createCountdownElement(countdown) {
+            // Create elements
+            const countdownDiv = document.createElement('div');
+            countdownDiv.classList.add('countdown');
+            countdownDiv.setAttribute('data-id', countdown.id);
+
+            const countdownTitle = document.createElement('h2');
+            countdownTitle.textContent = countdown.title;
+
+            const countdownDesc = document.createElement('p');
+            countdownDesc.textContent = countdown.description;
+
+            const timeRemaining = document.createElement('div');
+            timeRemaining.classList.add('time');
+
+            const sliderContainer = document.createElement('div');
+            sliderContainer.classList.add('slider-container');
+
+            const slider = document.createElement('div');
+            slider.classList.add('slider');
+
+            sliderContainer.appendChild(slider);
+
+            // Action Buttons (Edit & Delete)
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('actions');
+
+            // Add specific classes to edit and delete buttons
+            const editBtn = document.createElement('button');
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.title = 'Edit Countdown';
+            editBtn.classList.add('edit-btn');
+            editBtn.addEventListener('click', () => {
+                openModal(true, countdown);
+            });
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            deleteBtn.title = 'Delete Countdown';
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to delete this countdown?')) {
+                    deleteCountdown(countdown.id);
+                }
+            });
+
+            actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(deleteBtn);
+
+            countdownDiv.appendChild(actionsDiv);
+            countdownDiv.appendChild(countdownTitle);
+            countdownDiv.appendChild(countdownDesc);
+            countdownDiv.appendChild(timeRemaining);
+            countdownDiv.appendChild(sliderContainer);
+
+            // Function to update countdown
+            function updateCountdown() {
+                const now = new Date();
+                const targetDate = countdown.time ? new Date(`${countdown.date}T${countdown.time}:00`) : new Date(`${countdown.date}T00:00:00`);
+                const startDate = new Date(countdown.startDate);
+                const distance = targetDate - now;
+
+                // Automatic transition to history if countdown is completed
+                if (distance < 0 && countdown.status === 'active') {
+                    countdown.status = 'history';
+                    countdown.completedDate = now.toISOString();
+                    saveCountdowns();
+                    renderCountdowns();
+                    return;
+                }
+
+                if (countdown.status !== 'active') {
+                    timeRemaining.textContent = countdown.status === 'history' ? "Completed!" : "Deleted";
+                    slider.style.width = '0%';
+                    clearInterval(interval);
+                    return;
+                }
+
+                if (distance < 0) {
+                    timeRemaining.textContent = "Time's up!";
+                    slider.style.width = '100%';
+                    clearInterval(interval);
+                    return;
+                }
+
+                // Time calculations
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                // Display the result
+                timeRemaining.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+                // Update slider
+                const totalDuration = targetDate - startDate; // Total duration in milliseconds
+                const elapsed = now - startDate; // Elapsed time in milliseconds
+                const percentage = Math.min((elapsed / totalDuration) * 100, 100); // Ensure it doesn't exceed 100%
+
+                slider.style.width = `${percentage}%`;
+            }
+
+            // Initial update
+            updateCountdown();
+
+            // Update every second
+            const interval = setInterval(updateCountdown, 1000);
+
+            return countdownDiv;
+        }
+
+        // Function to render all countdowns based on current view
+        function renderCountdowns() {
+            // Clear existing countdowns
+            countdownsContainer.innerHTML = '';
+
+            let filteredCountdowns = [];
+
+            if (currentView === 'active') {
+                sectionTitle.textContent = 'Active Countdowns';
+                filteredCountdowns = countdowns.filter(cd => cd.status === 'active');
+            } else if (currentView === 'deleted') {
+                sectionTitle.textContent = 'Recently Deleted';
+                // Show only recently deleted (e.g., within last 7 days)
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                filteredCountdowns = countdowns.filter(cd => cd.status === 'deleted' && new Date(cd.deletedDate) >= sevenDaysAgo);
+            } else if (currentView === 'history') {
+                sectionTitle.textContent = 'History';
+                filteredCountdowns = countdowns.filter(cd => cd.status === 'history');
+            }
+
+            // Sort countdowns by target date
+            filteredCountdowns.sort((a, b) => {
+                const dateA = a.time ? new Date(`${a.date}T${a.time}:00`) : new Date(`${a.date}T00:00:00`);
+                const dateB = b.time ? new Date(`${b.date}T${b.time}:00`) : new Date(`${b.date}T00:00:00`);
+                return dateA - dateB;
+            });
+
+            // Create and append countdown elements
+            filteredCountdowns.forEach(countdown => {
+                const countdownElement = createCountdownElement(countdown);
+                countdownsContainer.appendChild(countdownElement);
+            });
+        }
+
+        // Function to delete a countdown (move to 'deleted' status)
+        function deleteCountdown(id) {
+            const countdownIndex = countdowns.findIndex(cd => cd.id === id);
+            if (countdownIndex !== -1) {
+                countdowns[countdownIndex].status = 'deleted';
+                countdowns[countdownIndex].deletedDate = new Date().toISOString();
+                saveCountdowns();
+                renderCountdowns();
+            }
+        }
+
+        // Function to permanently delete a countdown
+        function permanentlyDeleteCountdown(id) {
+            countdowns = countdowns.filter(cd => cd.id !== id);
+            saveCountdowns();
+            renderCountdowns();
+        }
+
+        // Function to recover a deleted countdown
+        function recoverCountdown(id) {
+            const countdownIndex = countdowns.findIndex(cd => cd.id === id);
+            if (countdownIndex !== -1) {
+                countdowns[countdownIndex].status = 'active';
+                countdowns[countdownIndex].deletedDate = null;
+                countdowns[countdownIndex].startDate = new Date().toISOString(); // Reset startDate
+                saveCountdowns();
+                renderCountdowns();
+            }
+        }
+
+        // Function to create a countdown element for different views
+        function createCountdownElement(countdown) {
+            // Create elements
+            const countdownDiv = document.createElement('div');
+            countdownDiv.classList.add('countdown');
+            countdownDiv.setAttribute('data-id', countdown.id);
+
+            const countdownTitle = document.createElement('h2');
+            countdownTitle.textContent = countdown.title;
+
+            const countdownDesc = document.createElement('p');
+            countdownDesc.textContent = countdown.description;
+
+            const timeRemaining = document.createElement('div');
+            timeRemaining.classList.add('time');
+
+            const sliderContainer = document.createElement('div');
+            sliderContainer.classList.add('slider-container');
+
+            const slider = document.createElement('div');
+            slider.classList.add('slider');
+
+            sliderContainer.appendChild(slider);
+
+            // Action Buttons (Edit & Delete) for Active view
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('actions');
+
+            if (currentView === 'active') {
+                const editBtn = document.createElement('button');
+                editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                editBtn.title = 'Edit Countdown';
+                editBtn.classList.add('edit-btn');
+                editBtn.addEventListener('click', () => {
+                    openModal(true, countdown);
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteBtn.title = 'Delete Countdown';
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to delete this countdown?')) {
+                        deleteCountdown(countdown.id);
+                    }
+                });
+
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(deleteBtn);
+            } else if (currentView === 'deleted') {
+                const recoverBtn = document.createElement('button');
+                recoverBtn.innerHTML = '<i class="fas fa-undo"></i>';
+                recoverBtn.title = 'Recover Countdown';
+                recoverBtn.classList.add('edit-btn'); // Reuse edit-btn for styling
+                recoverBtn.addEventListener('click', () => {
+                    recoverCountdown(countdown.id);
+                });
+
+                const permanentDeleteBtn = document.createElement('button');
+                permanentDeleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                permanentDeleteBtn.title = 'Permanently Delete';
+                permanentDeleteBtn.classList.add('delete-btn');
+                permanentDeleteBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to permanently delete this countdown? This action cannot be undone.')) {
+                        permanentlyDeleteCountdown(countdown.id);
+                    }
+                });
+
+                actionsDiv.appendChild(recoverBtn);
+                actionsDiv.appendChild(permanentDeleteBtn);
+            } else if (currentView === 'history') {
+                // No action buttons for history
+            }
+
+            countdownDiv.appendChild(actionsDiv);
+            countdownDiv.appendChild(countdownTitle);
+            countdownDiv.appendChild(countdownDesc);
+            countdownDiv.appendChild(timeRemaining);
+            countdownDiv.appendChild(sliderContainer);
+
+            // Function to update countdown
+            function updateCountdown() {
+                const now = new Date();
+                const targetDate = countdown.time ? new Date(`${countdown.date}T${countdown.time}:00`) : new Date(`${countdown.date}T00:00:00`);
+                const startDate = new Date(countdown.startDate);
+                const distance = targetDate - now;
+
+                // Automatic transition to history if countdown is completed
+                if (distance < 0 && countdown.status === 'active') {
+                    countdown.status = 'history';
+                    countdown.completedDate = now.toISOString();
+                    saveCountdowns();
+                    renderCountdowns();
+                    return;
+                }
+
+                if (currentView === 'active') {
+                    if (countdown.status !== 'active') {
+                        timeRemaining.textContent = countdown.status === 'history' ? "Completed!" : "Deleted";
+                        slider.style.width = '0%';
+                        clearInterval(interval);
+                        return;
+                    }
+
+                    if (distance < 0) {
+                        timeRemaining.textContent = "Time's up!";
+                        slider.style.width = '100%';
+                        clearInterval(interval);
+                        return;
+                    }
+
+                    // Time calculations
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    // Display the result
+                    timeRemaining.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+                    // Update slider
+                    const totalDuration = targetDate - startDate; // Total duration in milliseconds
+                    const elapsed = now - startDate; // Elapsed time in milliseconds
+                    const percentage = Math.min((elapsed / totalDuration) * 100, 100); // Ensure it doesn't exceed 100%
+
+                    slider.style.width = `${percentage}%`;
+                } else if (currentView === 'deleted') {
+                    timeRemaining.textContent = "Deleted";
+                    slider.style.width = '0%';
+                } else if (currentView === 'history') {
+                    timeRemaining.textContent = "Completed!";
+                    slider.style.width = '100%';
+                }
+            }
+
+            // Initial update
+            updateCountdown();
+
+            // Update every second
+            const interval = setInterval(updateCountdown, 1000);
+
+            return countdownDiv;
+        }
+
+        // Function to render all countdowns based on current view
+        function renderCountdowns() {
+            // Clear existing countdowns
+            countdownsContainer.innerHTML = '';
+
+            let filteredCountdowns = [];
+
+            if (currentView === 'active') {
+                sectionTitle.textContent = 'Active Countdowns';
+                filteredCountdowns = countdowns.filter(cd => cd.status === 'active');
+            } else if (currentView === 'deleted') {
+                sectionTitle.textContent = 'Recently Deleted';
+                // Show only recently deleted (e.g., within last 7 days)
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                filteredCountdowns = countdowns.filter(cd => cd.status === 'deleted' && new Date(cd.deletedDate) >= sevenDaysAgo);
+            } else if (currentView === 'history') {
+                sectionTitle.textContent = 'History';
+                filteredCountdowns = countdowns.filter(cd => cd.status === 'history');
+            }
+
+            // Sort countdowns by target date
+            filteredCountdowns.sort((a, b) => {
+                const dateA = a.time ? new Date(`${a.date}T${a.time}:00`) : new Date(`${a.date}T00:00:00`);
+                const dateB = b.time ? new Date(`${b.date}T${b.time}:00`) : new Date(`${b.date}T00:00:00`);
+                return dateA - dateB;
+            });
+
+            // Create and append countdown elements
+            filteredCountdowns.forEach(countdown => {
+                const countdownElement = createCountdownElement(countdown);
+                countdownsContainer.appendChild(countdownElement);
+            });
+        }
+
+        // Event listeners for sidebar navigation
+        navActive.addEventListener('click', () => {
+            currentView = 'active';
+            updateActiveNav();
+            renderCountdowns();
+        });
+
+        navDeleted.addEventListener('click', () => {
+            currentView = 'deleted';
+            updateActiveNav();
+            renderCountdowns();
+        });
+
+        navHistory.addEventListener('click', () => {
+            currentView = 'history';
+            updateActiveNav();
+            renderCountdowns();
+        });
+
+        // Function to update active navigation item
+        function updateActiveNav() {
+            // Remove 'active' class from all
+            document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
+            // Add 'active' class to current
+            if (currentView === 'active') {
+                navActive.classList.add('active');
+            } else if (currentView === 'deleted') {
+                navDeleted.classList.add('active');
+            } else if (currentView === 'history') {
+                navHistory.classList.add('active');
+            }
+        }
+
+        // Initial render on page load
+        renderCountdowns();
+
+    </script>
+
+</body>
+</html>
